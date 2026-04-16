@@ -13,6 +13,7 @@ from .text_utils import tokenize
 @dataclass
 class SearchEngineConfig:
     embedding_backend: str = "word2vec"
+    use_ann: bool = False
     ann_n_neighbors: int = 30
     ann_random_state: int = 42
     expansion_per_term: int = 3
@@ -21,6 +22,7 @@ class SearchEngineConfig:
     w2v_min_count: int = 2
     w2v_workers: int = 4
     w2v_epochs: int = 8
+    w2v_seed: int = 42
     bert_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
 
 
@@ -72,6 +74,7 @@ class WordEmbeddingSearchEngine:
                     min_count=self.config.w2v_min_count,
                     workers=self.config.w2v_workers,
                     epochs=self.config.w2v_epochs,
+                    seed=self.config.w2v_seed,
                 )
             )
             self.word_embedder.train(self.train_texts)
@@ -89,6 +92,7 @@ class WordEmbeddingSearchEngine:
         self.doc_index = ANNVectorIndex(
             vector_size=normalized_doc_vectors.shape[1],
             config=ANNConfig(
+                enabled=self.config.use_ann,
                 n_neighbors=self.config.ann_n_neighbors,
                 metric="cosine",
                 random_state=self.config.ann_random_state,
@@ -116,6 +120,7 @@ class WordEmbeddingSearchEngine:
         self.term_index = ANNVectorIndex(
             vector_size=term_vectors.shape[1],
             config=ANNConfig(
+                enabled=self.config.use_ann,
                 n_neighbors=term_neighbors,
                 metric="cosine",
                 random_state=self.config.ann_random_state,
@@ -132,6 +137,8 @@ class WordEmbeddingSearchEngine:
 
     def expand_query_terms(self, query: str) -> list[str]:
         if not self.supports_query_expansion():
+            return []
+        if self.config.expansion_per_term <= 0:
             return []
 
         assert self.word_embedder is not None

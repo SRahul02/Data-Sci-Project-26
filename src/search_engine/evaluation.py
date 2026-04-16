@@ -8,7 +8,9 @@ from typing import Iterable, Sequence
 class EvaluationResult:
     precision_at_k: dict[int, float]
     recall_at_k: dict[int, float]
+    queries_requested: int
     queries_evaluated: int
+    queries_skipped: int
 
 
 def precision_at_k(relevant_ids: set[int], retrieved_ids: Sequence[int], k: int) -> float:
@@ -46,11 +48,14 @@ def evaluate_engine(
     max_k = cleaned_k_values[-1]
     precision_sums = {k: 0.0 for k in cleaned_k_values}
     recall_sums = {k: 0.0 for k in cleaned_k_values}
+    queries_requested = len(query_texts)
 
     evaluated_queries = 0
+    skipped_queries = 0
     for query, label in zip(query_texts, query_labels):
         relevant = engine.relevant_doc_ids(label)
         if not relevant:
+            skipped_queries += 1
             continue
 
         retrieved = engine.search(
@@ -70,11 +75,15 @@ def evaluate_engine(
         return EvaluationResult(
             precision_at_k={k: 0.0 for k in cleaned_k_values},
             recall_at_k={k: 0.0 for k in cleaned_k_values},
+            queries_requested=queries_requested,
             queries_evaluated=0,
+            queries_skipped=skipped_queries,
         )
 
     return EvaluationResult(
         precision_at_k={k: precision_sums[k] / evaluated_queries for k in cleaned_k_values},
         recall_at_k={k: recall_sums[k] / evaluated_queries for k in cleaned_k_values},
+        queries_requested=queries_requested,
         queries_evaluated=evaluated_queries,
+        queries_skipped=skipped_queries,
     )

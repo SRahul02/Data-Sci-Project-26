@@ -1,14 +1,36 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Any, Tuple
+import warnings
 
 import numpy as np
-from pynndescent import NNDescent
+
+_NN_DESCENT_CLASS: Any | None = None
+_NN_DESCENT_IMPORT_ERROR: BaseException | None = None
+
+
+def _load_nndescent_class() -> Any | None:
+    global _NN_DESCENT_CLASS, _NN_DESCENT_IMPORT_ERROR
+
+    if _NN_DESCENT_CLASS is not None:
+        return _NN_DESCENT_CLASS
+    if _NN_DESCENT_IMPORT_ERROR is not None:
+        return None
+
+    try:
+        from pynndescent import NNDescent as _NNDescent
+
+        _NN_DESCENT_CLASS = _NNDescent
+        return _NN_DESCENT_CLASS
+    except BaseException as exc:
+        _NN_DESCENT_IMPORT_ERROR = exc
+        return None
 
 
 @dataclass
 class ANNConfig:
+    enabled: bool = False
     n_neighbors: int = 30
     metric: str = "cosine"
     random_state: int = 42
@@ -19,7 +41,7 @@ class ANNVectorIndex:
         self.vector_size = vector_size
         self.config = config or ANNConfig()
         self._vectors: np.ndarray | None = None
-        self._index: NNDescent | None = None
+        self._index: Any | None = None
 
     def build(self, vectors: np.ndarray) -> None:
         if vectors.ndim != 2 or vectors.shape[1] != self.vector_size:
@@ -32,14 +54,44 @@ class ANNVectorIndex:
             self._index = None
             return
 
+        if not self.config.enabled:
+            self._index = None
+            return
+
+        nn_descent_class = _load_nndescent_class()
+        if nn_descent_class is None:
+            reason = _NN_DESCENT_IMPORT_ERROR
+            warnings.warn(
+                "PyNNDescent import unavailable/interrupted; falling back to exact search. "
+                f"Reason: {reason}",
+                RuntimeWarning,
+            )
+            self._index = None
+            return
+
         n_neighbors = min(max(2, self.config.n_neighbors), len(self._vectors) - 1)
-        self._index = NNDescent(
-            self._vectors,
-            n_neighbors=n_neighbors,
-            metric=self.config.metric,
-            random_state=self.config.random_state,
-        )
-        self._index.prepare()
+        try:
+            self._index = nn_descent_class(
+                self._vectors,
+                n_neighbors=n_neighbors,
+                metric=self.config.metric,
+                random_state=self.config.random_state,
+            )
+            self._index.prepare()
+        except KeyboardInterrupt as exc:
+            warnings.warn(
+                "NNDescent initialization interrupted; falling back to exact search. "
+                f"Reason: {exc}",
+                RuntimeWarning,
+            )
+            self._index = None
+        except Exception as exc:
+            warnings.warn(
+                "NNDescent failed to initialize; falling back to exact search. "
+                f"Reason: {exc}",
+                RuntimeWarning,
+            )
+            self._index = None
 
     def _exact_query(self, vector: np.ndarray, k: int) -> Tuple[list[int], list[float]]:
         assert self._vectors is not None
@@ -69,8 +121,25 @@ class ANNVectorIndex:
         if self._index is None:
             return self._exact_query(vector, k)
 
-        ids, distances = self._index.query(
-            vector.reshape(1, -1).astype(np.float32),
-            k=k,
-        )
-        return ids[0].tolist(), distances[0].astype(float).tolist()
+        try:
+            ids, distances = self._index.query(
+                vector.reshape(1, -1).astype(np.float32),
+                k=k,
+            )
+            return ids[0].tolist(), distances[0].astype(float).tolist()
+        except KeyboardInterrupt as exc:
+            warnings.warn(
+                "NNDescent query interrupted; falling back to exact search. "
+                f"Reason: {exc}",
+                RuntimeWarning,
+            )
+            self._index = None
+            return self._exact_query(vector, k)
+        except Exception as exc:
+            warnings.warn(
+                "NNDescent query failed; falling back to exact search. "
+                f"Reason: {exc}",
+                RuntimeWarning,
+            )
+            self._index = None
+            return self._exact_query(vector, k)

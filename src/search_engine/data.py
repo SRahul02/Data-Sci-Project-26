@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, Optional, Tuple
 
-from datasets import Dataset, DatasetDict, load_dataset
+if TYPE_CHECKING:
+    from datasets import Dataset
 
 
 @dataclass(frozen=True)
@@ -19,6 +20,22 @@ class LoadedTextDataset:
     label_names: dict[int, str]
     text_column: str
     label_column: str
+
+
+def _import_hf_datasets() -> tuple[type, type, object]:
+    try:
+        from datasets import Dataset, DatasetDict, load_dataset
+
+        return Dataset, DatasetDict, load_dataset
+    except KeyboardInterrupt as exc:
+        raise RuntimeError(
+            "Import of Hugging Face 'datasets' was interrupted. "
+            "Please re-run and avoid interrupting during first-time dependency load."
+        ) from exc
+    except Exception as exc:
+        raise RuntimeError(
+            "Failed to import 'datasets'. Ensure dependencies are installed in the local .venv."
+        ) from exc
 
 
 def _subset(split: Dataset, max_items: Optional[int]) -> Dataset:
@@ -72,6 +89,8 @@ def load_text_classification_dataset(
     max_train: Optional[int] = None,
     max_test: Optional[int] = None,
 ) -> LoadedTextDataset:
+    Dataset, DatasetDict, load_dataset = _import_hf_datasets()
+
     dataset = load_dataset(dataset_name)
     if not isinstance(dataset, DatasetDict):
         raise ValueError(f"Expected DatasetDict from {dataset_name}, got {type(dataset)!r}.")
