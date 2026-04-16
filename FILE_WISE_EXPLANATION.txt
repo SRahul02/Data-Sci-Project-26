@@ -1,0 +1,217 @@
+Word Embedding Search Engine: File-by-File Explanation (Simple Version)
+
+This project builds and evaluates a semantic search engine using the AG News dataset.
+The engine can use Word2Vec or BERT embeddings, then retrieve documents using an
+Approximate Nearest Neighbor (ANN) index.
+
+===============================================================================
+TOP-LEVEL FILES
+===============================================================================
+
+1) README.md
+- What it is:
+  Main project guide.
+- What it does:
+  Explains project goal, install steps, run commands, evaluation setup, and structure.
+- When you use it:
+  First file to read when starting the project.
+
+2) requirements.txt
+- What it is:
+  List of Python packages needed by the project.
+- What it does:
+  Ensures all required libraries are installed (datasets, gensim, pynndescent, etc.).
+- When you use it:
+  Before running experiments, run: pip install -r requirements.txt
+
+3) .gitignore
+- What it is:
+  Rules for files/folders that should not be committed to git.
+- What it does:
+  Ignores temporary Python files, virtual env files, and generated artifacts.
+- Why useful:
+  Keeps repository clean.
+
+4) FILE_WISE_EXPLANATION.txt
+- What it is:
+  This explanatory document.
+- What it does:
+  Gives simple, detailed understanding of each file and the full flow.
+
+===============================================================================
+SCRIPT FILE
+===============================================================================
+
+5) scripts/run_experiment.py
+- What it is:
+  The main executable file for experiments.
+- What it does:
+  a) Reads command-line arguments (dataset, embedding type, k values, etc.)
+  b) Loads train/test data
+  c) Builds the search engine and index
+  d) Runs retrieval evaluation
+  e) Prints Precision@k and Recall@k
+  f) Prints sample query results and retrieved documents
+
+- Important note:
+  This is the file to run. (Name is run_experiment.py, singular.)
+
+- Typical command:
+  python scripts/run_experiment.py --dataset sh0416/ag_news --embedding word2vec --max-train 30000 --eval-queries 1000 --k 5 10 20
+
+===============================================================================
+SOURCE PACKAGE: src/search_engine/
+===============================================================================
+
+6) src/search_engine/__init__.py
+- What it is:
+  Package entry file.
+- What it does:
+  Re-exports important classes/functions so imports are cleaner.
+- Why useful:
+  Helps treat search_engine as a reusable package.
+
+7) src/search_engine/data.py
+- What it is:
+  Dataset loading and preprocessing helper.
+- What it does:
+  a) Loads dataset from Hugging Face (default: sh0416/ag_news)
+  b) Selects train/test (or fallback splits)
+  c) Detects text and label columns
+  d) Converts data into simple structures (texts and labels)
+  e) Provides label name mapping
+
+- Core output:
+  LoadedTextDataset object with:
+  - train texts/labels
+  - test texts/labels
+  - label names
+
+8) src/search_engine/text_utils.py
+- What it is:
+  Small text utility file.
+- What it does:
+  Tokenizes text by:
+  - converting to lowercase
+  - keeping alphabetic tokens only
+
+- Where used:
+  Used by Word2Vec embedding and query expansion logic.
+
+9) src/search_engine/embeddings.py
+- What it is:
+  Embedding logic (turn text into vectors).
+- What it does:
+  a) Word2VecEmbedder:
+     - trains Word2Vec on corpus tokens
+     - encodes document/query text by averaging token vectors
+  b) BertSentenceEmbedder:
+     - loads sentence-transformers model
+     - encodes sentences into dense vectors
+  c) l2_normalize:
+     - normalizes vectors to unit length for cosine-style similarity
+
+- Why important:
+  This is where semantic meaning gets converted into numbers.
+
+10) src/search_engine/ann.py
+- What it is:
+  ANN index wrapper.
+- What it does:
+  a) Builds approximate nearest-neighbor index using PyNNDescent
+  b) Supports fast nearest-neighbor query by vector
+  c) Returns nearest item IDs and distances
+  d) Falls back to exact search if dataset is very small
+
+- Why important:
+  Makes retrieval much faster than brute-force scanning on large corpora.
+
+11) src/search_engine/engine.py
+- What it is:
+  Core search engine implementation.
+- What it does:
+  a) Fits model on training documents
+  b) Builds document ANN index
+  c) In Word2Vec mode, also builds term ANN index for query expansion
+  d) For each query:
+     - builds query vector
+     - optionally expands query with related terms
+     - retrieves top-k nearest documents
+  e) Converts ANN distance to a similarity-like score
+  f) Stores label->document mapping for evaluation relevance
+
+- Why important:
+  This file contains the central retrieval logic.
+
+12) src/search_engine/evaluation.py
+- What it is:
+  Evaluation metrics logic.
+- What it does:
+  a) Computes Precision@k
+  b) Computes Recall@k
+  c) Evaluates many queries and returns averaged metrics
+
+- Relevance definition used:
+  A document is relevant if its label equals the query label.
+
+- Why useful:
+  Gives objective quality numbers for your assignment report.
+
+===============================================================================
+FULL EXECUTION FLOW (END-TO-END)
+===============================================================================
+
+Step 1: Run scripts/run_experiment.py
+Step 2: Script loads dataset via data.py
+Step 3: Engine chooses embedding backend (Word2Vec/BERT) via embeddings.py
+Step 4: Engine builds ANN index via ann.py
+Step 5: For each query, engine retrieves top-k nearest docs via engine.py
+Step 6: evaluation.py computes Precision@k and Recall@k
+Step 7: Script prints metrics and sample outputs
+
+===============================================================================
+INTERPRETING OUTPUT QUICKLY
+===============================================================================
+
+- Precision@k:
+  Out of k returned documents, how many were relevant.
+
+- Recall@k:
+  Out of all relevant documents in corpus, how many were found in top k.
+
+- Query expansion delta:
+  In Word2Vec mode, script prints score changes with/without expansion.
+  Positive delta means expansion helped; negative means expansion hurt.
+
+===============================================================================
+COMMON CONFUSIONS
+===============================================================================
+
+1) File name confusion:
+- Correct script is: scripts/run_experiment.py
+- If you run scripts/run_experiments.py (extra s), it will fail because that file does not exist.
+
+2) Very low recall values:
+- This can happen with label-based relevance and small k.
+- There can be many relevant docs per label, so top-5/top-10 covers only a small fraction.
+
+3) Word2Vec vs BERT:
+- Word2Vec is faster and supports term-level query expansion.
+- BERT often captures semantics better but is heavier.
+
+===============================================================================
+SUGGESTED NEXT STEPS FOR REPORT QUALITY
+===============================================================================
+
+- Run larger experiment:
+  --max-train 30000 --eval-queries 1000
+
+- Compare both backends:
+  --embedding word2vec
+  --embedding bert
+
+- Include a table:
+  Model | Expansion | P@5 | P@10 | P@20 | R@5 | R@10 | R@20
+
+- Add short analysis:
+  Explain why expansion helped or hurt on AG News and what this suggests.

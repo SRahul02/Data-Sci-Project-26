@@ -1,0 +1,6 @@
+datasets>=2.19.0
+gensim>=4.3.2
+numpy>=1.26.0
+pynndescent>=0.5.13
+sentence-transformers>=3.0.0
+tqdm>=4.66.0
