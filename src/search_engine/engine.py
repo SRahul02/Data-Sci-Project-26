@@ -34,6 +34,13 @@ class SearchResult:
     text: str
 
 
+@dataclass
+class SearchResultWithDescription:
+    rank: int
+    item: SearchResult
+    description: str
+
+
 class WordEmbeddingSearchEngine:
     def __init__(self, config: SearchEngineConfig) -> None:
         self.config = config
@@ -48,6 +55,7 @@ class WordEmbeddingSearchEngine:
         self.doc_index: ANNVectorIndex | None = None
         self.term_index: ANNVectorIndex | None = None
         self.vocab_terms: list[str] = []
+        self.doc_descriptions: list[str] = []
 
     def fit(self, texts: list[str], labels: list[int]) -> None:
         if len(texts) != len(labels):
@@ -57,6 +65,7 @@ class WordEmbeddingSearchEngine:
 
         self.train_texts = list(texts)
         self.train_labels = list(labels)
+        self.doc_descriptions = ["" for _ in self.train_texts]
 
         self.label_to_doc_ids = defaultdict(set)
         for doc_id, label in enumerate(self.train_labels):
@@ -222,6 +231,54 @@ class WordEmbeddingSearchEngine:
             )
 
         return results
+
+    def set_doc_descriptions(self, descriptions: list[str] | None) -> None:
+        if descriptions is None:
+            self.doc_descriptions = ["" for _ in self.train_texts]
+            return
+
+        if len(descriptions) != len(self.train_texts):
+            raise ValueError(
+                "descriptions length must match number of training texts. "
+                f"Got {len(descriptions)} descriptions for {len(self.train_texts)} texts."
+            )
+
+        self.doc_descriptions = [
+            "" if description is None else str(description)
+            for description in descriptions
+        ]
+
+    def search_with_description(
+        self,
+        query: str,
+        k: int = 10,
+        use_query_expansion: bool = True,
+    ) -> list[SearchResultWithDescription]:
+        ranked_results = self.search(
+            query=query,
+            k=k,
+            use_query_expansion=use_query_expansion,
+        )
+
+        detailed_results: list[SearchResultWithDescription] = []
+        descriptions = getattr(self, "doc_descriptions", None)
+        if not isinstance(descriptions, list) or len(descriptions) != len(self.train_texts):
+            descriptions = ["" for _ in self.train_texts]
+
+        for rank, item in enumerate(ranked_results, start=1):
+            description = descriptions[item.doc_id] if 0 <= item.doc_id < len(descriptions) else ""
+            if not description.strip():
+                description = "Description not available in dataset."
+
+            detailed_results.append(
+                SearchResultWithDescription(
+                    rank=rank,
+                    item=item,
+                    description=description,
+                )
+            )
+
+        return detailed_results
 
     def relevant_doc_ids(self, label: int) -> set[int]:
         return set(self.label_to_doc_ids.get(label, set()))

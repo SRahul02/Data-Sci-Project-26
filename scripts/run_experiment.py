@@ -73,7 +73,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--w2v-window", type=int, default=5)
     parser.add_argument("--w2v-min-count", type=int, default=2)
     parser.add_argument("--w2v-workers", type=int, default=4)
-    parser.add_argument("--w2v-epochs", type=int, default=8)
+    parser.add_argument("--w2v-epochs", type=int, default=50)
     parser.add_argument("--w2v-seed", type=int, default=None)
 
     parser.add_argument(
@@ -132,6 +132,10 @@ def print_metrics(title: str, result: EvaluationResult) -> None:
     print("Recall@k:")
     for k in sorted(result.recall_at_k):
         print(f"  R@{k}: {result.recall_at_k[k]:.4f}")
+    print(f"MAP: {result.map_score:.4f}")
+    print("nDCG@k:")
+    for k in sorted(result.ndcg_at_k):
+        print(f"  nDCG@{k}: {result.ndcg_at_k[k]:.4f}")
 
 
 def sample_query_indices(total: int, n: int, seed: int) -> list[int]:
@@ -239,7 +243,14 @@ def main() -> None:
         for k in sorted(expanded.precision_at_k):
             p_delta = expanded.precision_at_k[k] - baseline.precision_at_k[k]
             r_delta = expanded.recall_at_k[k] - baseline.recall_at_k[k]
-            print(f"  k={k}: delta P@k={p_delta:+.4f}, delta R@k={r_delta:+.4f}")
+            ndcg_delta = expanded.ndcg_at_k[k] - baseline.ndcg_at_k[k]
+            print(
+                f"  k={k}: delta P@k={p_delta:+.4f}, "
+                f"delta R@k={r_delta:+.4f}, "
+                f"delta nDCG@k={ndcg_delta:+.4f}"
+            )
+        map_delta = expanded.map_score - baseline.map_score
+        print(f"  delta MAP={map_delta:+.4f}")
     else:
         bert_result = evaluate_engine(
             engine,
