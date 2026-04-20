@@ -1,7 +1,7 @@
-(.venv) PS C:\Users\dhruv\Desktop\IIT\Data Science\Data-Sci-Project-26> python scripts/run_experiment.py --dataset sh0416/ag_news --embedding word2vec --max-train 30000 --eval-queries 1000 --k 5 10 20
+(.venv) PS C:\Users\dhruv\Desktop\IIT\Data Science\Data-Sci-Project-26> python scripts/run_experiment.py --dataset sh0416/ag_news --embedding word2vec --max-train 50000 --eval-queries 1000 --k 5 10 20 
 Loading dataset...
 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Train size: 30000
+Train size: 50000
 Test size:  7600
 Retrieval index mode: Exact
 Building engine with backend=word2vec...
@@ -11,116 +11,116 @@ Queries requested: 1000
 Queries evaluated: 1000
 Queries skipped:   0
 Precision@k:
-  P@5: 0.6996
-  P@10: 0.6874
-  P@20: 0.6680
+  P@5: 0.7386
+  P@10: 0.7197
+  P@20: 0.7055
 Recall@k:
-  R@5: 0.0005
-  R@10: 0.0009
-  R@20: 0.0018
-MAP: 0.5644
+  R@5: 0.0003
+  R@10: 0.0006
+  R@20: 0.0011
+MAP: 0.6132
 nDCG@k:
-  nDCG@5: 0.7028
-  nDCG@10: 0.6932
-  nDCG@20: 0.6777
+  nDCG@5: 0.7419
+  nDCG@10: 0.7273
+  nDCG@20: 0.7146
 
 Word2Vec Retrieval (with query expansion)
 Queries requested: 1000
 Queries evaluated: 1000
 Queries skipped:   0
 Precision@k:
-  P@5: 0.7238
-  P@10: 0.7042
-  P@20: 0.6898
+  P@5: 0.7510
+  P@10: 0.7389
+  P@20: 0.7252
 Recall@k:
-  R@5: 0.0005
-  R@10: 0.0009
-  R@20: 0.0018
-MAP: 0.6044
+  R@5: 0.0003
+  R@10: 0.0006
+  R@20: 0.0012
+MAP: 0.6464
 nDCG@k:
-  nDCG@5: 0.7309
-  nDCG@10: 0.7147
-  nDCG@20: 0.7007
+  nDCG@5: 0.7529
+  nDCG@10: 0.7438
+  nDCG@20: 0.7324
 
 Delta from expansion
-  k=5: delta P@k=+0.0242, delta R@k=+0.0000, delta nDCG@k=+0.0281
-  k=10: delta P@k=+0.0168, delta R@k=+0.0000, delta nDCG@k=+0.0215
-  k=20: delta P@k=+0.0218, delta R@k=+0.0001, delta nDCG@k=+0.0230
-  delta MAP=+0.0400
+  k=5: delta P@k=+0.0124, delta R@k=+0.0000, delta nDCG@k=+0.0110
+  k=10: delta P@k=+0.0192, delta R@k=+0.0000, delta nDCG@k=+0.0165
+  k=20: delta P@k=+0.0197, delta R@k=+0.0000, delta nDCG@k=+0.0178
+  delta MAP=+0.0332
 
 Sample queries and retrieval outputs
 
 ================================================================================
 Query label: 1 (1)
 Query text: Israeli Soldiers Kill Palestinian Gunman in Gaza -Army (Reuters)
-Expanded terms: ['strip', 'vehicles', 'armored', 'breakaway', 'moroccan', 'separatist', 'injure', 'casualties', 'wound', 'liners', 'prisoners', 'hunger']
-   1. doc_id=13758 label=1 (1) score=0.9073 text=Israeli Army Kills Gunman in Gaza Strip (Reuters)
-   2. doc_id=13745 label=1 (1) score=0.8935 text=Israeli Army Kills Gunman in Gaza Strip
-   3. doc_id=5851 label=1 (1) score=0.8916 text=Soldiers kill Palestinian near Gaza-Israel fence
-   4. doc_id=16756 label=1 (1) score=0.8872 text=Israeli Army Destroys Gaza Homes After Bus Bombings (Reuters)
-   5. doc_id=2261 label=1 (1) score=0.8851 text=Five Palestinians dead in Israeli attempt to kill Hamas activist
-   6. doc_id=2403 label=1 (1) score=0.8844 text=Five Palestinians killed Israeli attack that targeted Hamas activist in Gaza City
-   7. doc_id=28491 label=1 (1) score=0.8825 text=Israeli Troops Raid Nablus, Jenin, Kill 11 Palestinians
-   8. doc_id=20180 label=1 (1) score=0.8785 text=13 killed in Israeli raid on Hamas activists #39;training #39; in Gaza
-   9. doc_id=1272 label=1 (1) score=0.8752 text=Israeli Soldiers Kill Two Gaza Militants (Reuters)
-  10. doc_id=16777 label=1 (1) score=0.8701 text=Israeli Army Destroys Gaza Homes After Bus Bombings
-  11. doc_id=18240 label=1 (1) score=0.8687 text=Israeli Soldier, Militant Killed in Gaza
-  12. doc_id=14613 label=1 (1) score=0.8667 text=Israeli, Palestinian Killed in Gaza Clash (AP)
-  13. doc_id=13658 label=1 (1) score=0.8616 text=Israeli troops kill armed Palestinian infiltrator
-  14. doc_id=27938 label=1 (1) score=0.8606 text=Israeli Troops Kill 5 in West Bank Clashes-Witnesses
-  15. doc_id=17075 label=1 (1) score=0.8573 text=Israel Destroys Dozens of Palestinian Homes in Gaza
-  16. doc_id=2941 label=1 (1) score=0.8571 text=One Hamas leader survived assassination; five Palestinians killed in an Israeli bombardment in Gaza
-  17. doc_id=2086 label=1 (1) score=0.8558 text=Israeli Attack in Gaza Kills Five Palestinians, Haaretz Says
-  18. doc_id=20462 label=1 (1) score=0.8548 text=Israeli Strike in Gaza Kills at Least 14 Palestinians
-  19. doc_id=1729 label=1 (1) score=0.8526 text=Israeli soldiers kill boy in Nablus
-  20. doc_id=15613 label=1 (1) score=0.8522 text=Several Killed in Israeli Bus Bombings
+Expanded terms: ['armored', 'jenin', 'nablus', 'gurkha', 'georgians', 'mosul', 'injure', 'nagaland', 'wound', 'barghouthi', 'infiltrate', 'abbas']
+   1. doc_id=13758 label=1 (1) score=0.9099 text=Israeli Army Kills Gunman in Gaza Strip (Reuters)
+   2. doc_id=32452 label=1 (1) score=0.9001 text=Israeli Soldiers Kill Palestinian in Gaza
+   3. doc_id=43189 label=1 (1) score=0.8987 text=Israeli Army Kills Gunman in Gaza Raid-Medics (Reuters)
+   4. doc_id=13745 label=1 (1) score=0.8984 text=Israeli Army Kills Gunman in Gaza Strip
+   5. doc_id=36892 label=1 (1) score=0.8931 text=Israeli Soldiers, Palestinian Gunmen Killed in Gaza Clash
+   6. doc_id=28491 label=1 (1) score=0.8924 text=Israeli Troops Raid Nablus, Jenin, Kill 11 Palestinians
+   7. doc_id=1272 label=1 (1) score=0.8916 text=Israeli Soldiers Kill Two Gaza Militants (Reuters)
+   8. doc_id=47875 label=1 (1) score=0.8902 text=Israeli Rockets Kill Two in Gaza Strip Camp (Reuters)
+   9. doc_id=5851 label=1 (1) score=0.8887 text=Soldiers kill Palestinian near Gaza-Israel fence
+  10. doc_id=43229 label=1 (1) score=0.8875 text=Israeli Army Kills Gunman in Gaza Raid-Medics
+  11. doc_id=2261 label=1 (1) score=0.8851 text=Five Palestinians dead in Israeli attempt to kill Hamas activist
+  12. doc_id=2403 label=1 (1) score=0.8846 text=Five Palestinians killed Israeli attack that targeted Hamas activist in Gaza City
+  13. doc_id=2941 label=1 (1) score=0.8841 text=One Hamas leader survived assassination; five Palestinians killed in an Israeli bombardment in Gaza
+  14. doc_id=47882 label=1 (1) score=0.8804 text=Israeli Rockets Kill Two in Gaza Strip Camp
+  15. doc_id=42141 label=1 (1) score=0.8784 text=Israeli Soldiers Kill Palestinian in West Bank Raid (Reuters)
+  16. doc_id=1729 label=1 (1) score=0.8774 text=Israeli soldiers kill boy in Nablus
+  17. doc_id=2086 label=1 (1) score=0.8760 text=Israeli Attack in Gaza Kills Five Palestinians, Haaretz Says
+  18. doc_id=38868 label=1 (1) score=0.8736 text=Israeli Missile Kills One in Gaza Camp -- Medics (Reuters)
+  19. doc_id=36912 label=1 (1) score=0.8722 text=Palestinians Kill 3 Israeli Troops in Gaza
+  20. doc_id=37015 label=1 (1) score=0.8719 text=Palestinian gunmen kill 3 Israelis in Gaza
 
 ================================================================================
 Query label: 4 (4)
 Query text: CRM Best Practices: TCO and ROI (NewsFactor)
-Expanded terms: ['sweetens', 'preferred', 'siebel', 'schrder', 'bowler', 'antarctica', 'alleges', 'revise', 'archiver', 'dentistry', 'chiropody', 'darin']
-   1. doc_id=3143 label=4 (4) score=0.8233 text=Analyst: CRM Mergers and Acquisitions Picking Up (NewsFactor)
-   2. doc_id=7379 label=3 (3) score=0.8039 text=EDS picks Siebel as its preferred CRM vendor
-   3. doc_id=7572 label=4 (4) score=0.8039 text=EDS picks Siebel as its preferred CRM vendor
-   4. doc_id=1968 label=4 (4) score=0.7840 text=Aberdeen: CRM To Lead SMB Enterprise Software Spending (NewsFactor)
-   5. doc_id=1055 label=4 (4) score=0.7671 text=Oracle updates CRM sales tools
-   6. doc_id=7448 label=4 (4) score=0.7664 text=EDS, Siebel partner for tailored business packages
-   7. doc_id=7548 label=4 (4) score=0.7658 text=Cisco, Microsoft merge IP telephony with CRM
-   8. doc_id=7964 label=4 (4) score=0.7658 text=Cisco, Microsoft merge IP telephony with CRM
-   9. doc_id=28765 label=4 (4) score=0.7569 text=Hidden Costs of Online CRM - Part 2 (NewsFactor)
-  10. doc_id=8833 label=4 (4) score=0.7549 text=Cisco buys IP application vendor P-Cube
-  11. doc_id=8130 label=4 (4) score=0.7516 text=Cisco, Microsoft Target SMBs with CRM Tool
-  12. doc_id=28272 label=4 (4) score=0.7494 text=Cisco announces integrated services routers aimed at SMBs and SMEs
-  13. doc_id=15844 label=4 (4) score=0.7488 text=Analyst: CRM, Supply-Chain Software To Lead Spending (NewsFactor)
-  14. doc_id=8008 label=4 (4) score=0.7468 text=Call Of The SMB: Cisco Ties VoIP To Microsoft CRM
-  15. doc_id=8420 label=4 (4) score=0.7424 text=Cisco offers IP connector for Microsoft CRM
-  16. doc_id=1857 label=4 (4) score=0.7361 text=Kinko #39;s Software Connects Windows Apps to Print Centers
-  17. doc_id=5803 label=4 (4) score=0.7351 text=NetApp strengthens partnership with Oracle and VERITAS
-  18. doc_id=29644 label=4 (4) score=0.7346 text=Oracle hires HP VP to sell software hosting service
-  19. doc_id=5319 label=4 (4) score=0.7341 text=The CRM Money Pit - Part 4 (NewsFactor)
-  20. doc_id=378 label=4 (4) score=0.7321 text=MSN Adds Movie Downloads and Rentals
+Expanded terms: ['vertical', 'sugarcrm', 'sweetens', 'brightest', 'deceptive', 'mothers', 'revise', 'jb', 'improper', 'between', 'loos', 'sda']
+   1. doc_id=3143 label=4 (4) score=0.8213 text=Analyst: CRM Mergers and Acquisitions Picking Up (NewsFactor)
+   2. doc_id=1968 label=4 (4) score=0.7698 text=Aberdeen: CRM To Lead SMB Enterprise Software Spending (NewsFactor)
+   3. doc_id=1055 label=4 (4) score=0.7623 text=Oracle updates CRM sales tools
+   4. doc_id=7548 label=4 (4) score=0.7522 text=Cisco, Microsoft merge IP telephony with CRM
+   5. doc_id=7964 label=4 (4) score=0.7522 text=Cisco, Microsoft merge IP telephony with CRM
+   6. doc_id=15844 label=4 (4) score=0.7479 text=Analyst: CRM, Supply-Chain Software To Lead Spending (NewsFactor)
+   7. doc_id=7572 label=4 (4) score=0.7443 text=EDS picks Siebel as its preferred CRM vendor
+   8. doc_id=7379 label=3 (3) score=0.7443 text=EDS picks Siebel as its preferred CRM vendor
+   9. doc_id=49553 label=3 (3) score=0.7426 text=VERITAS: Discounted and Attractive
+  10. doc_id=7448 label=4 (4) score=0.7400 text=EDS, Siebel partner for tailored business packages
+  11. doc_id=4531 label=3 (3) score=0.7376 text=Ohio sues Best Buy, alleges deceptive sales practices
+  12. doc_id=1857 label=4 (4) score=0.7372 text=Kinko #39;s Software Connects Windows Apps to Print Centers
+  13. doc_id=8420 label=4 (4) score=0.7348 text=Cisco offers IP connector for Microsoft CRM
+  14. doc_id=28765 label=4 (4) score=0.7317 text=Hidden Costs of Online CRM - Part 2 (NewsFactor)
+  15. doc_id=38652 label=4 (4) score=0.7317 text=Hidden Costs of Online CRM - Part 3 (NewsFactor)
+  16. doc_id=85 label=4 (4) score=0.7310 text=Open Source Apps Developer SugarCRM Releases Sugar.Sales 1.1 (TechWeb)
+  17. doc_id=42808 label=4 (4) score=0.7310 text=The CRM Money Pit - Part 5 (NewsFactor)
+  18. doc_id=5319 label=4 (4) score=0.7310 text=The CRM Money Pit - Part 4 (NewsFactor)
+  19. doc_id=2891 label=4 (4) score=0.7281 text=Boston Globe: #39;Forget Microsoft and buy an Apple iPod - it works #39;
+  20. doc_id=41152 label=4 (4) score=0.7274 text=New EarthLink Mac software fights phishing scams (MacCentral)
 
 ================================================================================
 Query label: 4 (4)
 Query text: Intel calls for Internet overhaul
-Expanded terms: ['pentium', 'wimax', 'chipset', 'welsh', 'expanded', 'kurdish', 'hellman', 'shrug', 'controllers', 'porn', 'libraries', 'cafes']
-   1. doc_id=21389 label=4 (4) score=0.7533 text=Intel Outlines WiMax Plans for Upcoming Rosedale Chip
-   2. doc_id=14331 label=4 (4) score=0.7509 text=Public servants sacked for viewing internet porn at work
-   3. doc_id=20159 label=4 (4) score=0.7461 text=New numbering system planned for internet calls
-   4. doc_id=24221 label=4 (4) score=0.7448 text=Intel Proposes Internet Transformation
-   5. doc_id=25603 label=4 (4) score=0.7425 text=Intel suggests upgrading internet to Intelnet
-   6. doc_id=22875 label=4 (4) score=0.7414 text=Intel CTO: New Protocol Needed For Next-Gen #39;Net
-   7. doc_id=23580 label=4 (4) score=0.7362 text=Intel plans to fix internet
-   8. doc_id=572 label=1 (1) score=0.7335 text=Police push for surveillance fee on customers' phone, Internet bills (Canadian Press)
-   9. doc_id=11140 label=4 (4) score=0.7334 text=Intel Strikes Up Tri-Band Wireless Technology For Centrino
-  10. doc_id=29926 label=4 (4) score=0.7331 text=Intel discloses WiMAX silicon plans
-  11. doc_id=2211 label=4 (4) score=0.7286 text=Intel backtracks on offering chips for projection TVs now
-  12. doc_id=21166 label=4 (4) score=0.7280 text=Novell, Red Hat, Sun Pledge Support for AMD's Dual-Core Chips (NewsFactor)
-  13. doc_id=21146 label=4 (4) score=0.7240 text=Wireless Technology to Rival Cable, DSL - Intel (Reuters)
-  14. doc_id=22984 label=4 (4) score=0.7205 text=IDF - Intel seeks role in development of the next Internet
-  15. doc_id=23009 label=4 (4) score=0.7205 text=IDF - Intel seeks role in development of the next Internet
-  16. doc_id=1048 label=4 (4) score=0.7198 text=Intel to Delay Product for High-Definition TVs
-  17. doc_id=21085 label=4 (4) score=0.7193 text=Wireless Technology to Rival Cable, DSL - Intel
-  18. doc_id=1503 label=4 (4) score=0.7182 text=Intel delays delivery of chip for projection TVs - report
-  19. doc_id=11448 label=4 (4) score=0.7166 text=Intel Adds Tri-mode (802.11a,b,g) Wireless Module
-  20. doc_id=23290 label=4 (4) score=0.7164 text=Intel issues dire warning about internet #39;s future
+Expanded terms: ['pentium', 'chipset', 'rosedale', 'plantation', 'ariel', 'snubs', 'to', 'dreamliner', 'numbering', 'cafes', 'libraries', 'overlay']
+   1. doc_id=25603 label=4 (4) score=0.7916 text=Intel suggests upgrading internet to Intelnet
+   2. doc_id=24221 label=4 (4) score=0.7881 text=Intel Proposes Internet Transformation
+   3. doc_id=23580 label=4 (4) score=0.7804 text=Intel plans to fix internet
+   4. doc_id=20159 label=4 (4) score=0.7742 text=New numbering system planned for internet calls
+   5. doc_id=22984 label=4 (4) score=0.7738 text=IDF - Intel seeks role in development of the next Internet
+   6. doc_id=23009 label=4 (4) score=0.7738 text=IDF - Intel seeks role in development of the next Internet
+   7. doc_id=24419 label=4 (4) score=0.7641 text=Intel Suggests Overlay To Boost Internet Performance
+   8. doc_id=25165 label=4 (4) score=0.7641 text=Intel suggests overlay to boost Internet performance
+   9. doc_id=22875 label=4 (4) score=0.7637 text=Intel CTO: New Protocol Needed For Next-Gen #39;Net
+  10. doc_id=24054 label=4 (4) score=0.7634 text=Intel seeks role in development of the next Internet
+  11. doc_id=10507 label=4 (4) score=0.7602 text=Intel to launch tri-mode chipset
+  12. doc_id=21389 label=4 (4) score=0.7569 text=Intel Outlines WiMax Plans for Upcoming Rosedale Chip
+  13. doc_id=41602 label=4 (4) score=0.7536 text=Intel Corp. Makes Marketing Push for Centrino Chip (Reuters)
+  14. doc_id=40519 label=4 (4) score=0.7514 text=Itanium unsuitable for workstations, Intel says
+  15. doc_id=43506 label=4 (4) score=0.7497 text=Intel intros new Pentium 4 for desktop replacements
+  16. doc_id=40590 label=4 (4) score=0.7489 text=HP to stop using Intel Itanium chip: WSJ
+  17. doc_id=23758 label=4 (4) score=0.7457 text=Intel hopes to help build Internet of the Future
+  18. doc_id=9409 label=4 (4) score=0.7453 text=Intel to launch tri-mode Wi-Fi chip set
+  19. doc_id=9176 label=4 (4) score=0.7446 text=Intel Cuts Prices in Preparation for New Product Line (NewsFactor)
+  20. doc_id=1503 label=4 (4) score=0.7444 text=Intel delays delivery of chip for projection TVs - report
