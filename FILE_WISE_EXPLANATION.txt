@@ -1,8 +1,13 @@
-Word Embedding Search Engine: File-by-File Explanation (Simple Version)
+Word Embedding Search Engine: File-by-File Explanation (Updated Simple Version)
 
-This project builds and evaluates a semantic search engine using the AG News dataset.
-The engine can use Word2Vec or BERT embeddings, then retrieve documents using an
-Approximate Nearest Neighbor (ANN) index.
+This project builds, evaluates, saves, reloads, and serves a semantic search engine
+for AG News. It supports Word2Vec and BERT embeddings, exact or ANN retrieval, and
+multiple evaluation metrics.
+
+Now the project has 3 usage modes:
+1) CLI experiment mode
+2) Train-and-save checkpoint mode
+3) Streamlit app mode for interactive search from saved checkpoints
 
 ===============================================================================
 TOP-LEVEL FILES
@@ -10,208 +15,289 @@ TOP-LEVEL FILES
 
 1) README.md
 - What it is:
-  Main project guide.
+  Main guide for setup, commands, and troubleshooting.
 - What it does:
-  Explains project goal, install steps, run commands, evaluation setup, and structure.
-- When you use it:
-  First file to read when starting the project.
+  Documents CLI options, metric outputs, and reproducibility notes.
+- When to use it:
+  First file to read.
 
 2) requirements.txt
 - What it is:
-  List of Python packages needed by the project.
+  Dependency list.
 - What it does:
-  Ensures all required libraries are installed (datasets, gensim, pynndescent, etc.).
-- When you use it:
-  Before running experiments, run: pip install -r requirements.txt
+  Installs required packages for dataset loading, embedding, ANN, and app UI.
+- Typical use:
+  pip install -r requirements.txt
 
 3) .gitignore
 - What it is:
-  Rules for files/folders that should not be committed to git.
+  Git ignore rules.
 - What it does:
-  Ignores temporary Python files, virtual env files, and generated artifacts.
-- Why useful:
-  Keeps repository clean.
+  Excludes cache files, local environment files, and temporary artifacts.
 
-4) FILE_WISE_EXPLANATION.txt
+4) app.py
 - What it is:
-  This explanatory document.
+  Streamlit web app entry point.
 - What it does:
-  Gives simple, detailed understanding of each file and the full flow.
+  a) Loads highest-epoch saved checkpoint for selected model
+  b) Restores runtime state (indexes, config, and BERT embedder when needed)
+  c) Optionally attaches description text aligned from dataset columns
+  d) Runs interactive search and shows expandable result cards
+  e) Displays model-level metrics and query-level metrics
+
+5) results.txt
+- What it is:
+  Saved console output from runs.
+- What it does:
+  Keeps a reference run log (metrics + sample retrieval outputs).
+
+6) FILE_WISE_EXPLANATION.txt
+- What it is:
+  This document.
+- What it does:
+  Explains current file roles and execution flow.
+
+7) models/
+- What it is:
+  Saved checkpoint directory.
+- What it does:
+  Stores pickled model checkpoints as epoch_XXX.pkl under:
+  - models/word2vec/
+  - models/bert/
 
 ===============================================================================
-SCRIPT FILE
+SCRIPTS
 ===============================================================================
 
-5) scripts/run_experiment.py
+8) scripts/run_experiment.py
 - What it is:
-  The main executable file for experiments.
+  Main CLI experiment runner.
 - What it does:
-  a) Reads command-line arguments (dataset, embedding type, k values, etc.)
-  b) Loads train/test data
-  c) Builds the search engine and index
-  d) Runs retrieval evaluation
-  e) Prints Precision@k and Recall@k
-  f) Prints sample query results and retrieved documents
+  a) Parses CLI arguments for dataset, embedding backend, k values, ANN toggles,
+     Word2Vec settings, and BERT model name
+  b) Loads dataset and trains engine in-memory
+  c) Evaluates retrieval on sampled queries
+  d) Prints metrics:
+     - Precision@k
+     - Recall@k
+     - nDCG@k
+     - MAP
+     - Queries requested/evaluated/skipped
+  e) In Word2Vec mode, compares with/without query expansion and prints deltas
+  f) Prints sample query outputs
 
-- Important note:
-  This is the file to run. (Name is run_experiment.py, singular.)
+- Important behavior:
+  Exact search is default for stability. ANN is enabled only with --use-ann.
 
 - Typical command:
-  python scripts/run_experiment.py --dataset sh0416/ag_news --embedding word2vec --max-train 30000 --eval-queries 1000 --k 5 10 20
+  python scripts/run_experiment.py --embedding word2vec --max-train 30000 --eval-queries 1000 --k 5 10 20
+
+9) scripts/train_and_save_models.py
+- What it is:
+  Training + checkpoint creation script.
+- What it does:
+  a) Uses editable constants at top of file (not CLI args)
+  b) Trains selected backend
+  c) Evaluates on sampled test queries
+  d) Saves checkpoint payload with engine, config, dataset info, and metrics
+  e) Writes checkpoints to models/<model_name>/epoch_XXX.pkl
+
+- Important behavior:
+  For Word2Vec it can save multiple epochs listed in MODEL_EPOCHS.
+  For BERT it keeps highest epoch from the given list.
+
+- How to use:
+  Edit constants in script, then run:
+  python scripts/train_and_save_models.py
+
+10) scripts/evaluate_saved_model.py
+- What it is:
+  Saved-checkpoint evaluator.
+- What it does:
+  a) Loads highest-epoch checkpoint from models/<model_name>/
+  b) Restores runtime state after unpickling
+  c) Prints metrics stored during training
+  d) Runs fresh evaluation using current constants
+  e) Runs direct search for QUERY_TEXT and prints top results
+
+- How to use:
+  Edit constants in script, then run:
+  python scripts/evaluate_saved_model.py
 
 ===============================================================================
 SOURCE PACKAGE: src/search_engine/
 ===============================================================================
 
-6) src/search_engine/__init__.py
+11) src/search_engine/__init__.py
 - What it is:
-  Package entry file.
+  Package entry module.
 - What it does:
-  Re-exports important classes/functions so imports are cleaner.
-- Why useful:
-  Helps treat search_engine as a reusable package.
+  Lazy-exports important classes/functions so importing search_engine does not
+  eagerly load heavy dependencies.
 
-7) src/search_engine/data.py
+12) src/search_engine/data.py
 - What it is:
-  Dataset loading and preprocessing helper.
+  Dataset loader and schema inference helper.
 - What it does:
-  a) Loads dataset from Hugging Face (default: sh0416/ag_news)
-  b) Selects train/test (or fallback splits)
-  c) Detects text and label columns
-  d) Converts data into simple structures (texts and labels)
-  e) Provides label name mapping
+  a) Loads Hugging Face dataset (default expected: sh0416/ag_news)
+  b) Chooses train/test splits with fallback logic
+  c) Infers text and label columns if names differ
+  d) Applies max_train and max_test subsetting
+  e) Returns normalized dataclasses:
+     - CorpusSplit
+     - LoadedTextDataset
 
-- Core output:
-  LoadedTextDataset object with:
-  - train texts/labels
-  - test texts/labels
-  - label names
-
-8) src/search_engine/text_utils.py
+13) src/search_engine/text_utils.py
 - What it is:
-  Small text utility file.
+  Tokenization utility.
 - What it does:
-  Tokenizes text by:
-  - converting to lowercase
-  - keeping alphabetic tokens only
+  Lowercases text and extracts alphabetic tokens only.
 
-- Where used:
-  Used by Word2Vec embedding and query expansion logic.
-
-9) src/search_engine/embeddings.py
+14) src/search_engine/embeddings.py
 - What it is:
-  Embedding logic (turn text into vectors).
+  Embedding backends and vector utilities.
 - What it does:
   a) Word2VecEmbedder:
-     - trains Word2Vec on corpus tokens
-     - encodes document/query text by averaging token vectors
+     - trains gensim Word2Vec when available
+     - uses deterministic fallback token vectors if import/training fails or is interrupted
+     - encodes text by averaging token vectors
   b) BertSentenceEmbedder:
      - loads sentence-transformers model
-     - encodes sentences into dense vectors
+     - encodes text into sentence vectors
   c) l2_normalize:
-     - normalizes vectors to unit length for cosine-style similarity
+     - normalizes vectors for cosine-style similarity search
 
-- Why important:
-  This is where semantic meaning gets converted into numbers.
-
-10) src/search_engine/ann.py
+15) src/search_engine/ann.py
 - What it is:
-  ANN index wrapper.
+  ANN index abstraction.
 - What it does:
-  a) Builds approximate nearest-neighbor index using PyNNDescent
-  b) Supports fast nearest-neighbor query by vector
-  c) Returns nearest item IDs and distances
-  d) Falls back to exact search if dataset is very small
+  a) Wraps optional PyNNDescent indexing
+  b) Supports exact-search fallback when ANN is disabled/unavailable/fails
+  c) Returns nearest ids and distances for query vectors
 
-- Why important:
-  Makes retrieval much faster than brute-force scanning on large corpora.
-
-11) src/search_engine/engine.py
+16) src/search_engine/engine.py
 - What it is:
-  Core search engine implementation.
+  Core retrieval engine.
 - What it does:
-  a) Fits model on training documents
-  b) Builds document ANN index
-  c) In Word2Vec mode, also builds term ANN index for query expansion
-  d) For each query:
-     - builds query vector
-     - optionally expands query with related terms
-     - retrieves top-k nearest documents
-  e) Converts ANN distance to a similarity-like score
-  f) Stores label->document mapping for evaluation relevance
+  a) Stores train texts/labels and relevance mapping by label
+  b) Builds document vector index
+  c) In Word2Vec mode, builds term index for query expansion
+  d) Searches top-k documents and converts distance to cosine-like score
+  e) Supports search_with_description for app display
+  f) Exposes relevant_doc_ids(label) for evaluation
 
-- Why important:
-  This file contains the central retrieval logic.
-
-12) src/search_engine/evaluation.py
+17) src/search_engine/evaluation.py
 - What it is:
-  Evaluation metrics logic.
+  Retrieval metric module.
 - What it does:
-  a) Computes Precision@k
-  b) Computes Recall@k
-  c) Evaluates many queries and returns averaged metrics
+  Computes and aggregates:
+  - Precision@k
+  - Recall@k
+  - nDCG@k
+  - AP@k helper
+  - MAP (from AP)
+  Also tracks query accounting:
+  - queries_requested
+  - queries_evaluated
+  - queries_skipped
 
-- Relevance definition used:
-  A document is relevant if its label equals the query label.
-
-- Why useful:
-  Gives objective quality numbers for your assignment report.
+Relevance rule used in evaluation:
+A train document is relevant when its class label matches the query label.
 
 ===============================================================================
-FULL EXECUTION FLOW (END-TO-END)
+FULL EXECUTION FLOWS (CURRENT)
 ===============================================================================
 
-Step 1: Run scripts/run_experiment.py
-Step 2: Script loads dataset via data.py
-Step 3: Engine chooses embedding backend (Word2Vec/BERT) via embeddings.py
-Step 4: Engine builds ANN index via ann.py
-Step 5: For each query, engine retrieves top-k nearest docs via engine.py
-Step 6: evaluation.py computes Precision@k and Recall@k
-Step 7: Script prints metrics and sample outputs
+FLOW A: One-command experiment run
+1) Run scripts/run_experiment.py with CLI arguments
+2) Dataset loads from data.py
+3) Engine selects Word2Vec or BERT from embeddings.py
+4) Index backend is exact by default, ANN only if --use-ann
+5) evaluation.py computes metrics and query accounting
+6) Script prints metrics + sample retrieval outputs
+
+FLOW B: Train and save model checkpoints
+1) Set constants in scripts/train_and_save_models.py
+2) Train model and evaluate
+3) Save checkpoint payload to models/<model>/epoch_XXX.pkl
+4) Highest epoch is treated as latest checkpoint
+
+FLOW C: Evaluate saved checkpoint
+1) Set constants in scripts/evaluate_saved_model.py
+2) Load highest epoch checkpoint
+3) Restore runtime state (including BERT embedder if required)
+4) Print saved metrics + fresh metrics + direct query results
+
+FLOW D: Interactive app
+1) Run streamlit run app.py
+2) Select model, type query, choose k, toggle expansion if available
+3) App loads checkpoint, attaches descriptions when possible
+4) App shows:
+   - model-level metrics from checkpoint
+   - query-level P@k, R@k, nDCG@k, AP@k
+   - expandable top-k retrieved results with description text
 
 ===============================================================================
 INTERPRETING OUTPUT QUICKLY
 ===============================================================================
 
 - Precision@k:
-  Out of k returned documents, how many were relevant.
+  Out of top-k retrieved documents, fraction that are relevant.
 
 - Recall@k:
-  Out of all relevant documents in corpus, how many were found in top k.
+  Out of all relevant documents in train corpus, fraction retrieved in top-k.
 
-- Query expansion delta:
-  In Word2Vec mode, script prints score changes with/without expansion.
-  Positive delta means expansion helped; negative means expansion hurt.
+- nDCG@k:
+  Ranking quality with higher weight for relevant documents appearing earlier.
+
+- MAP:
+  Mean average precision over evaluated queries (single-number ranking summary).
+
+- Query accounting:
+  If queries_skipped > 0, averages are computed only on evaluated queries.
+
+- Expansion delta (Word2Vec in run_experiment.py):
+  Positive delta means query expansion improved the metric.
 
 ===============================================================================
-COMMON CONFUSIONS
+COMMON CONFUSIONS (UPDATED)
 ===============================================================================
 
-1) File name confusion:
-- Correct script is: scripts/run_experiment.py
-- If you run scripts/run_experiments.py (extra s), it will fail because that file does not exist.
+1) Script name confusion:
+- Correct file is scripts/run_experiment.py (singular).
 
-2) Very low recall values:
-- This can happen with label-based relevance and small k.
-- There can be many relevant docs per label, so top-5/top-10 covers only a small fraction.
+2) ANN expectation mismatch:
+- ANN is not always on.
+- In run_experiment.py, ANN is enabled only when --use-ann is provided.
 
-3) Word2Vec vs BERT:
-- Word2Vec is faster and supports term-level query expansion.
-- BERT often captures semantics better but is heavier.
+3) train_and_save_models.py and evaluate_saved_model.py usage:
+- These two scripts mainly use editable constants, not command-line flags.
+
+4) Which checkpoint is loaded:
+- evaluate_saved_model.py and app.py load the highest epoch_XXX.pkl automatically.
+
+5) Query expansion availability:
+- Query expansion is only for Word2Vec mode.
+- BERT mode does not use expansion.
+
+6) Low recall values at small k:
+- Label-based relevance can produce many relevant docs per class.
+- Top-5 or top-10 may cover only a tiny portion, so recall can look very small.
 
 ===============================================================================
 SUGGESTED NEXT STEPS FOR REPORT QUALITY
 ===============================================================================
 
-- Run larger experiment:
-  --max-train 30000 --eval-queries 1000
+- Compare Exact vs ANN:
+  Run with and without --use-ann and compare quality/runtime.
 
-- Compare both backends:
-  --embedding word2vec
-  --embedding bert
+- Compare Word2Vec vs BERT on the same subset and seed.
 
-- Include a table:
-  Model | Expansion | P@5 | P@10 | P@20 | R@5 | R@10 | R@20
+- Include a richer table in report:
+  Model | Index mode | Expansion | P@5 | P@10 | P@20 | R@5 | R@10 | R@20 | nDCG@10 | MAP
 
-- Add short analysis:
-  Explain why expansion helped or hurt on AG News and what this suggests.
+- Include query accounting in analysis:
+  Report queries requested/evaluated/skipped to explain metric reliability.
+
+- Validate saved-checkpoint workflow:
+  Train, save, reload, and show matching or near-matching evaluation behavior.
